@@ -23,6 +23,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Restore stable debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: acc-cleaner-debug-keystore-v1
+
       - name: Set up Gradle 9.5
         uses: gradle/actions/setup-gradle@v4
         with:
