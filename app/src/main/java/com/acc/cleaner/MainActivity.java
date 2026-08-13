@@ -20,6 +20,7 @@ import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
@@ -122,11 +123,23 @@ public class MainActivity extends Activity {
 
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(18), dp(18), dp(18), dp(36));
+        root.setPadding(dp(18), dp(18), dp(18), dp(24));
         scroll.addView(root, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         setContentView(scroll);
+
+        scroll.setOnApplyWindowInsetsListener((v, insets) -> {
+            int bottomInset;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                bottomInset = insets.getInsets(WindowInsets.Type.systemBars()).bottom;
+            } else {
+                bottomInset = insets.getSystemWindowInsetBottom();
+            }
+            root.setPadding(dp(18), dp(18), dp(18), dp(24) + bottomInset);
+            return insets;
+        });
+        scroll.requestApplyInsets();
 
         TextView brand = text("ACC CLEANER", 13, cPrimary2, Typeface.BOLD);
         brand.setLetterSpacing(0.18f);
@@ -264,7 +277,7 @@ public class MainActivity extends Activity {
         safety.setGravity(Gravity.CENTER);
         safety.setLetterSpacing(0.08f);
         LinearLayout.LayoutParams safeLp = lpMatchWrap();
-        safeLp.topMargin = dp(18);
+        safeLp.topMargin = dp(14);
         root.addView(safety, safeLp);
     }
 
@@ -529,7 +542,7 @@ public class MainActivity extends Activity {
     private void renderResults(ScanStats stats) {
         resultsContainer.removeAllViews();
         if (scanResults.isEmpty()) {
-            resultSummary.setText("Tidak ada kandidat pembersihan dari aturan ACC Cleaner v1.0.");
+            resultSummary.setText("Tidak ada kandidat pembersihan dari aturan ACC Cleaner v1.0.1.");
             cleanButton.setEnabled(false);
             cleanButton.setAlpha(0.45f);
             return;
@@ -552,8 +565,19 @@ public class MainActivity extends Activity {
             lp.topMargin = dp(10);
             resultsContainer.addView(limit, lp);
         }
-        cleanButton.setEnabled(true);
-        cleanButton.setAlpha(1f);
+        updateCleanButtonState();
+    }
+
+    private void updateCleanButtonState() {
+        boolean anySelected = false;
+        for (CleanItem item : scanResults) {
+            if (item.checkbox != null && item.checkbox.isChecked()) {
+                anySelected = true;
+                break;
+            }
+        }
+        cleanButton.setEnabled(anySelected);
+        cleanButton.setAlpha(anySelected ? 1f : 0.45f);
     }
 
     private View resultRow(CleanItem item) {
@@ -566,6 +590,7 @@ public class MainActivity extends Activity {
         box.setButtonTintList(android.content.res.ColorStateList.valueOf(cPrimary));
         box.setTag(item);
         item.checkbox = box;
+        box.setOnCheckedChangeListener((buttonView, isChecked) -> updateCleanButtonState());
         row.addView(box, new LinearLayout.LayoutParams(dp(44), dp(44)));
 
         LinearLayout copy = new LinearLayout(this);
@@ -654,8 +679,9 @@ public class MainActivity extends Activity {
                 refreshStorage();
                 if (hasDeepAccess()) startDeepScan();
                 else {
-                    cleanButton.setEnabled(true);
-                    cleanButton.setAlpha(1f);
+                    cleanButton.setEnabled(false);
+                    cleanButton.setAlpha(0.45f);
+                    resultSummary.setText("Pembersihan selesai. Jalankan Folder Scan lagi untuk memperbarui hasil.");
                 }
             });
         });
