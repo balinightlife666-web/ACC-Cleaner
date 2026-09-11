@@ -10,8 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -29,7 +27,6 @@ import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -37,7 +34,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,7 +60,6 @@ public class ReviewMainActivity extends Activity {
     private final AtomicBoolean scanning = new AtomicBoolean(false);
     private final List<ReviewItem> results = new ArrayList<>();
 
-    private LinearLayout root;
     private LinearLayout resultsBox;
     private TextView storageText;
     private TextView accessText;
@@ -128,7 +123,7 @@ public class ReviewMainActivity extends Activity {
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(bg);
 
-        root = new LinearLayout(this);
+        LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(16), dp(18), dp(16), dp(30));
         scroll.addView(root, new ScrollView.LayoutParams(
@@ -136,16 +131,16 @@ public class ReviewMainActivity extends Activity {
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         setContentView(scroll);
 
-        TextView brand = label("ACC CLEANER · v1.0.3", 12, primary, Typeface.BOLD);
+        TextView brand = text("ACC CLEANER · v1.0.3", 12, primary, Typeface.BOLD);
         brand.setLetterSpacing(0.14f);
         root.addView(brand);
 
-        TextView title = label("Lihat file dulu. Baru putuskan.", 25, text, Typeface.BOLD);
+        TextView title = text("Lihat file dulu. Baru putuskan.", 25, text, Typeface.BOLD);
         LinearLayout.LayoutParams titleLp = matchWrap();
         titleLp.topMargin = dp(5);
         root.addView(title, titleLp);
 
-        TextView sub = label("Tidak ada auto-select dan tidak ada auto-delete.", 13, muted, Typeface.NORMAL);
+        TextView sub = text("Tidak ada auto-select dan tidak ada auto-delete.", 13, muted, Typeface.NORMAL);
         LinearLayout.LayoutParams subLp = matchWrap();
         subLp.topMargin = dp(5);
         root.addView(sub, subLp);
@@ -154,17 +149,14 @@ public class ReviewMainActivity extends Activity {
         LinearLayout.LayoutParams storageLp = matchWrap();
         storageLp.topMargin = dp(14);
         root.addView(storageCard, storageLp);
+        storageCard.addView(section("PENYIMPANAN"));
 
-        TextView storageLabel = label("PENYIMPANAN", 11, primary, Typeface.BOLD);
-        storageLabel.setLetterSpacing(0.12f);
-        storageCard.addView(storageLabel);
-
-        storageText = label("Menghitung…", 19, text, Typeface.BOLD);
+        storageText = text("Menghitung…", 19, text, Typeface.BOLD);
         LinearLayout.LayoutParams storageTextLp = matchWrap();
         storageTextLp.topMargin = dp(7);
         storageCard.addView(storageText, storageTextLp);
 
-        accessText = label("Memeriksa akses…", 12, muted, Typeface.BOLD);
+        accessText = text("Memeriksa akses…", 12, muted, Typeface.BOLD);
         LinearLayout.LayoutParams accessLp = matchWrap();
         accessLp.topMargin = dp(5);
         storageCard.addView(accessText, accessLp);
@@ -196,7 +188,7 @@ public class ReviewMainActivity extends Activity {
         progressLp.topMargin = dp(14);
         root.addView(scanProgress, progressLp);
 
-        statusText = label("Belum ada scan.", 12, muted, Typeface.NORMAL);
+        statusText = text("Belum ada scan.", 12, muted, Typeface.NORMAL);
         statusText.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams statusLp = matchWrap();
         statusLp.topMargin = dp(7);
@@ -206,12 +198,9 @@ public class ReviewMainActivity extends Activity {
         LinearLayout.LayoutParams resultLp = matchWrap();
         resultLp.topMargin = dp(14);
         root.addView(resultCard, resultLp);
+        resultCard.addView(section("FILE YANG PERLU DITINJAU"));
 
-        TextView resultLabel = label("FILE YANG PERLU DITINJAU", 11, primary, Typeface.BOLD);
-        resultLabel.setLetterSpacing(0.10f);
-        resultCard.addView(resultLabel);
-
-        summaryText = label(
+        summaryText = text(
                 "Setelah scan, nama file, jenis, ukuran, sumber, lokasi dan status risikonya tampil di sini.",
                 13, muted, Typeface.NORMAL);
         LinearLayout.LayoutParams summaryLp = matchWrap();
@@ -233,8 +222,8 @@ public class ReviewMainActivity extends Activity {
         resultCard.addView(deleteButton, deleteLp);
         deleteButton.setOnClickListener(v -> confirmDelete());
 
-        TextView safety = label(
-                "Checklist selalu kosong setelah scan. Tap file untuk detail. File penting memakai dua konfirmasi sebelum dihapus permanen.",
+        TextView safety = text(
+                "Checklist selalu kosong setelah scan. Tap file untuk detail. Penghapusan permanen memakai dua konfirmasi.",
                 11, warning, Typeface.BOLD);
         safety.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams safetyLp = matchWrap();
@@ -248,8 +237,7 @@ public class ReviewMainActivity extends Activity {
             StatFs stat = new StatFs(path.getAbsolutePath());
             long total = stat.getTotalBytes();
             long free = stat.getAvailableBytes();
-            long used = Math.max(0, total - free);
-            storageText.setText(formatBytes(used) + " / " + formatBytes(total) + " terpakai");
+            storageText.setText(formatBytes(Math.max(0, total - free)) + " / " + formatBytes(total) + " terpakai");
         } catch (Throwable t) {
             storageText.setText("Penyimpanan tidak dapat dibaca");
         }
@@ -268,9 +256,7 @@ public class ReviewMainActivity extends Activity {
     }
 
     private boolean hasDeepAccess() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return Environment.isExternalStorageManager();
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) return Environment.isExternalStorageManager();
         return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -283,13 +269,21 @@ public class ReviewMainActivity extends Activity {
             } catch (Throwable t) {
                 startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
             }
-            Toast.makeText(this, "Aktifkan akses file untuk ACC Cleaner, lalu kembali dan tekan Scan Perangkat.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    "Aktifkan akses file untuk ACC Cleaner, lalu kembali dan tekan Scan Perangkat.",
+                    Toast.LENGTH_LONG).show();
         } else {
             requestPermissions(new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
             }, REQ_STORAGE);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_STORAGE && hasDeepAccess()) startDeepScan();
     }
 
     private void openFolderPicker() {
@@ -325,11 +319,11 @@ public class ReviewMainActivity extends Activity {
         if (scanning.getAndSet(true)) return;
         prepareScan("Deep Scan berjalan…");
         executor.execute(() -> {
-            AtomicInteger scanned = new AtomicInteger();
             List<ReviewItem> found = new ArrayList<>();
+            AtomicInteger scanned = new AtomicInteger();
             try {
                 scanFileTree(Environment.getExternalStorageDirectory(), found, scanned);
-                sortResults(found);
+                sort(found);
                 finishScan(found, scanned.get(), "Deep Scan");
             } catch (Throwable t) {
                 failScan("Deep Scan gagal: " + safeMessage(t));
@@ -341,13 +335,13 @@ public class ReviewMainActivity extends Activity {
         if (scanning.getAndSet(true)) return;
         prepareScan("Folder Scan berjalan…");
         executor.execute(() -> {
-            AtomicInteger scanned = new AtomicInteger();
             List<ReviewItem> found = new ArrayList<>();
+            AtomicInteger scanned = new AtomicInteger();
             try {
                 String rootId = DocumentsContract.getTreeDocumentId(treeUri);
                 Uri rootDoc = DocumentsContract.buildDocumentUriUsingTree(treeUri, rootId);
                 scanDocumentTree(rootDoc, treeUri, found, scanned, 0);
-                sortResults(found);
+                sort(found);
                 finishScan(found, scanned.get(), "Folder Scan");
             } catch (Throwable t) {
                 failScan("Folder Scan gagal: " + safeMessage(t));
@@ -373,7 +367,17 @@ public class ReviewMainActivity extends Activity {
 
         int count = scanned.incrementAndGet();
         Category category = classify(node.getName(), node.getAbsolutePath(), node.length(), node.lastModified());
-        if (category != null) found.add(ReviewItem.fromFile(node, category));
+        if (category != null) {
+            ReviewItem item = new ReviewItem();
+            item.file = node;
+            item.name = node.getName();
+            item.pathHint = node.getAbsolutePath();
+            item.size = Math.max(0L, node.length());
+            item.modified = node.lastModified();
+            item.category = category;
+            item.mime = mimeFromName(item.name);
+            found.add(item);
+        }
         publishProgress(count, found.size());
     }
 
@@ -382,7 +386,6 @@ public class ReviewMainActivity extends Activity {
         if (Thread.currentThread().isInterrupted() || depth > 64) return;
         String parentId = DocumentsContract.getDocumentId(documentUri);
         Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId);
-        ContentResolver resolver = getContentResolver();
         String[] projection = new String[]{
                 DocumentsContract.Document.COLUMN_DOCUMENT_ID,
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME,
@@ -391,7 +394,7 @@ public class ReviewMainActivity extends Activity {
                 DocumentsContract.Document.COLUMN_SIZE
         };
 
-        try (Cursor cursor = resolver.query(childrenUri, projection, null, null, null)) {
+        try (Cursor cursor = getContentResolver().query(childrenUri, projection, null, null, null)) {
             if (cursor == null) return;
             int idCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
             int nameCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
@@ -406,12 +409,23 @@ public class ReviewMainActivity extends Activity {
                 long modified = cursor.isNull(modCol) ? 0L : cursor.getLong(modCol);
                 long size = cursor.isNull(sizeCol) ? 0L : cursor.getLong(sizeCol);
                 Uri child = DocumentsContract.buildDocumentUriUsingTree(treeUri, id);
+
                 if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) {
                     scanDocumentTree(child, treeUri, found, scanned, depth + 1);
                 } else {
                     int count = scanned.incrementAndGet();
                     Category category = classify(name, id, size, modified);
-                    if (category != null) found.add(ReviewItem.fromUri(child, name, id, size, modified, category, mime));
+                    if (category != null) {
+                        ReviewItem item = new ReviewItem();
+                        item.uri = child;
+                        item.name = name == null ? "File tanpa nama" : name;
+                        item.pathHint = id == null ? child.toString() : id;
+                        item.size = Math.max(0L, size);
+                        item.modified = modified;
+                        item.category = category;
+                        item.mime = mime == null || mime.isBlank() ? mimeFromName(item.name) : mime;
+                        found.add(item);
+                    }
                     publishProgress(count, found.size());
                 }
             }
@@ -423,17 +437,16 @@ public class ReviewMainActivity extends Activity {
         String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
         String p = pathHint == null ? "" : pathHint.replace('\\', '/').toLowerCase(Locale.ROOT);
         long age = modified > 0 ? System.currentTimeMillis() - modified : 0L;
-
         if (n.endsWith(".apk")) return Category.APK;
         if (n.contains("screenshot") || p.contains("/screenshots/") || p.contains(":pictures/screenshots/")) return Category.SCREENSHOT;
         if ((p.contains("/download/") || p.contains(":download/")) && modified > 0 && age >= OLD_DOWNLOAD_MS) return Category.OLD_DOWNLOAD;
-        if (isTemp(n)) return Category.TEMP;
+        if (isTempName(n)) return Category.TEMP;
         if (size >= LARGE_BYTES) return Category.LARGE;
         return null;
     }
 
-    private void sortResults(List<ReviewItem> found) {
-        Collections.sort(found, Comparator.comparingLong((ReviewItem i) -> i.size).reversed());
+    private void sort(List<ReviewItem> found) {
+        Collections.sort(found, Comparator.comparingLong((ReviewItem item) -> item.size).reversed());
     }
 
     private void publishProgress(int scanned, int found) {
@@ -490,13 +503,14 @@ public class ReviewMainActivity extends Activity {
         long total = 0L;
         for (ReviewItem item : results) total += item.size;
         summaryText.setText(formatInt(results.size()) + " file · " + formatBytes(total)
-                + "\nChecklist masih kosong. Tap satu file untuk lihat detail atau membukanya.");
+                + "\nChecklist masih kosong. Nama dan lokasi file terlihat sebelum kamu memilih.");
 
         int shown = Math.min(DISPLAY_LIMIT, results.size());
         for (int i = 0; i < shown; i++) resultsBox.addView(resultRow(results.get(i)));
 
         if (results.size() > DISPLAY_LIMIT) {
-            TextView limit = label("Menampilkan " + DISPLAY_LIMIT + " file terbesar dari hasil scan. Gunakan Pilih Folder untuk review yang lebih spesifik.",
+            TextView limit = text(
+                    "Menampilkan " + DISPLAY_LIMIT + " file terbesar. Gunakan Pilih Folder untuk pemeriksaan lebih rinci.",
                     12, warning, Typeface.BOLD);
             LinearLayout.LayoutParams lp = matchWrap();
             lp.topMargin = dp(10);
@@ -520,10 +534,12 @@ public class ReviewMainActivity extends Activity {
         box.setOnCheckedChangeListener((buttonView, checked) -> updateDeleteState());
         row.addView(box, new LinearLayout.LayoutParams(dp(42), dp(42)));
 
-        View preview = previewView(item);
-        LinearLayout.LayoutParams previewLp = new LinearLayout.LayoutParams(dp(56), dp(56));
-        previewLp.setMargins(0, 0, dp(10), 0);
-        row.addView(preview, previewLp);
+        TextView badge = text(shortKind(item), 10, primary, Typeface.BOLD);
+        badge.setGravity(Gravity.CENTER);
+        badge.setBackground(rounded(surface2, dp(10)));
+        LinearLayout.LayoutParams badgeLp = new LinearLayout.LayoutParams(dp(54), dp(54));
+        badgeLp.setMargins(0, 0, dp(10), 0);
+        row.addView(badge, badgeLp);
 
         LinearLayout copy = new LinearLayout(this);
         copy.setOrientation(LinearLayout.VERTICAL);
@@ -532,28 +548,28 @@ public class ReviewMainActivity extends Activity {
         copy.setOnClickListener(v -> showDetails(item));
         row.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
-        TextView name = label(item.name, 14, text, Typeface.BOLD);
+        TextView name = text(item.name, 14, text, Typeface.BOLD);
         name.setMaxLines(2);
         copy.addView(name);
 
-        TextView meta = label(item.kind() + " · " + formatBytes(item.size) + " · " + item.category.label,
+        TextView meta = text(kind(item) + " · " + formatBytes(item.size) + " · " + item.category.label,
                 11, primary, Typeface.BOLD);
         LinearLayout.LayoutParams metaLp = matchWrap();
         metaLp.topMargin = dp(2);
         copy.addView(meta, metaLp);
 
-        TextView source = label(item.source(), 11, muted, Typeface.NORMAL);
+        TextView source = text("Sumber: " + sourceFromPath(item.pathHint), 11, muted, Typeface.NORMAL);
         LinearLayout.LayoutParams sourceLp = matchWrap();
         sourceLp.topMargin = dp(2);
         copy.addView(source, sourceLp);
 
-        TextView path = label(item.pathHint, 10, muted, Typeface.NORMAL);
+        TextView path = text(item.pathHint, 10, muted, Typeface.NORMAL);
         path.setMaxLines(2);
         LinearLayout.LayoutParams pathLp = matchWrap();
         pathLp.topMargin = dp(2);
         copy.addView(path, pathLp);
 
-        TextView risk = label(item.riskLabel(), 10, item.highRisk() ? danger : warning, Typeface.BOLD);
+        TextView risk = text(riskLabel(item), 10, highRisk(item) ? danger : warning, Typeface.BOLD);
         LinearLayout.LayoutParams riskLp = matchWrap();
         riskLp.topMargin = dp(3);
         copy.addView(risk, riskLp);
@@ -572,63 +588,17 @@ public class ReviewMainActivity extends Activity {
         return wrapper;
     }
 
-    private View previewView(ReviewItem item) {
-        if (item.kind().equals("Gambar")) {
-            Bitmap bitmap = loadSmallBitmap(item);
-            if (bitmap != null) {
-                ImageView image = new ImageView(this);
-                image.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                image.setImageBitmap(bitmap);
-                GradientDrawable bgDrawable = rounded(surface2, dp(10));
-                image.setBackground(bgDrawable);
-                image.setClipToOutline(true);
-                return image;
-            }
-        }
-
-        TextView icon = label(item.shortKind(), 10, primary, Typeface.BOLD);
-        icon.setGravity(Gravity.CENTER);
-        icon.setBackground(rounded(surface2, dp(10)));
-        return icon;
-    }
-
-    private Bitmap loadSmallBitmap(ReviewItem item) {
-        try {
-            BitmapFactory.Options bounds = new BitmapFactory.Options();
-            bounds.inJustDecodeBounds = true;
-            if (item.file != null) {
-                BitmapFactory.decodeFile(item.file.getAbsolutePath(), bounds);
-            } else if (item.uri != null) {
-                try (InputStream input = getContentResolver().openInputStream(item.uri)) {
-                    BitmapFactory.decodeStream(input, null, bounds);
-                }
-            }
-            int sample = 1;
-            while ((bounds.outWidth / sample) > 256 || (bounds.outHeight / sample) > 256) sample *= 2;
-            BitmapFactory.Options opts = new BitmapFactory.Options();
-            opts.inSampleSize = Math.max(1, sample);
-            if (item.file != null) return BitmapFactory.decodeFile(item.file.getAbsolutePath(), opts);
-            if (item.uri != null) {
-                try (InputStream input = getContentResolver().openInputStream(item.uri)) {
-                    return BitmapFactory.decodeStream(input, null, opts);
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return null;
-    }
-
     private void showDetails(ReviewItem item) {
         String modified = item.modified > 0
                 ? new SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault()).format(new Date(item.modified))
                 : "Tidak diketahui";
-        String message = "Jenis: " + item.kind()
+        String message = "Jenis: " + kind(item)
                 + "\nKategori scan: " + item.category.label
                 + "\nUkuran: " + formatBytes(item.size)
-                + "\nSumber: " + item.source()
+                + "\nSumber: " + sourceFromPath(item.pathHint)
                 + "\nTerakhir diubah: " + modified
-                + "\n\nSTATUS: " + item.riskLabel()
-                + "\n" + item.riskReason()
+                + "\n\nSTATUS: " + riskLabel(item)
+                + "\n" + riskReason(item)
                 + "\n\nLokasi:\n" + item.pathHint;
 
         new AlertDialog.Builder(this)
@@ -645,17 +615,21 @@ public class ReviewMainActivity extends Activity {
         if (uri == null && item.file != null) uri = findMediaUri(item.file);
         if (uri == null) {
             copyLocation(item.pathHint);
-            Toast.makeText(this, "Android tidak memberi URI untuk membuka file ini. Lokasinya sudah disalin.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    "Android tidak memberi URI untuk membuka file ini. Lokasinya sudah disalin.",
+                    Toast.LENGTH_LONG).show();
             return;
         }
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, item.mime());
+            intent.setDataAndType(uri, item.mime == null || item.mime.isBlank() ? "*/*" : item.mime);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(Intent.createChooser(intent, "Buka file dengan"));
         } catch (Throwable t) {
             copyLocation(item.pathHint);
-            Toast.makeText(this, "File tidak dapat dibuka dari izin saat ini. Lokasinya sudah disalin.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    "File tidak dapat dibuka dari izin saat ini. Lokasinya sudah disalin.",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
@@ -700,15 +674,15 @@ public class ReviewMainActivity extends Activity {
             if (item.checkbox != null && item.checkbox.isChecked()) {
                 selected.add(item);
                 total += item.size;
-                if (item.highRisk()) high++;
+                if (highRisk(item)) high++;
             }
         }
         if (selected.isEmpty()) return;
 
+        long finalTotal = total;
         String message = "Terpilih " + selected.size() + " file · " + formatBytes(total)
                 + "\n\n" + high + " file berstatus PERIKSA DULU."
                 + "\n\nTidak ada file yang dipilih otomatis oleh ACC Cleaner.";
-        long finalTotal = total;
         new AlertDialog.Builder(this)
                 .setTitle("Periksa pilihan sebelum hapus")
                 .setMessage(message)
@@ -767,25 +741,60 @@ public class ReviewMainActivity extends Activity {
         });
     }
 
-    private boolean isTemp(String n) {
-        return n.endsWith(".tmp") || n.endsWith(".temp") || n.endsWith(".log")
-                || n.endsWith(".bak") || n.endsWith(".old");
-    }
-
-    private String kindFrom(String name, String mime) {
-        String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
-        String m = mime == null ? "" : mime.toLowerCase(Locale.ROOT);
+    private String kind(ReviewItem item) {
+        String n = item.name == null ? "" : item.name.toLowerCase(Locale.ROOT);
+        String m = item.mime == null ? "" : item.mime.toLowerCase(Locale.ROOT);
         if (m.startsWith("video/") || endsWithAny(n, ".mp4", ".mkv", ".mov", ".avi", ".webm", ".3gp")) return "Video";
         if (m.startsWith("image/") || endsWithAny(n, ".jpg", ".jpeg", ".png", ".webp", ".heic", ".gif")) return "Gambar";
         if (m.startsWith("audio/") || endsWithAny(n, ".mp3", ".m4a", ".wav", ".aac", ".flac", ".ogg")) return "Audio";
         if (n.endsWith(".apk") || m.equals("application/vnd.android.package-archive")) return "Installer APK";
         if (m.startsWith("text/") || endsWithAny(n, ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv")) return "Dokumen";
         if (endsWithAny(n, ".zip", ".rar", ".7z", ".tar", ".gz")) return "Arsip";
-        if (isTemp(n)) return "File sementara / log";
+        if (isTempName(n)) return "File sementara / log";
         return "File lain";
     }
 
-    private String sourceFrom(String path) {
+    private String shortKind(ReviewItem item) {
+        String k = kind(item);
+        if (k.equals("Video")) return "VID";
+        if (k.equals("Gambar")) return "IMG";
+        if (k.equals("Audio")) return "AUD";
+        if (k.contains("APK")) return "APK";
+        if (k.equals("Dokumen")) return "DOC";
+        if (k.equals("Arsip")) return "ZIP";
+        if (item.category == Category.TEMP) return "TMP";
+        return "FILE";
+    }
+
+    private boolean highRisk(ReviewItem item) {
+        String k = kind(item);
+        if (k.equals("Video") || k.equals("Gambar") || k.equals("Audio") || k.equals("Dokumen")) return true;
+        return item.category == Category.SCREENSHOT || item.category == Category.OLD_DOWNLOAD || item.category == Category.APK;
+    }
+
+    private String riskLabel(ReviewItem item) {
+        return highRisk(item) ? "PERIKSA DULU" : "TINJAU SEBELUM HAPUS";
+    }
+
+    private String riskReason(ReviewItem item) {
+        String k = kind(item);
+        if (k.equals("Video") || k.equals("Gambar") || k.equals("Audio") || k.equals("Dokumen"))
+            return "Bisa merupakan file pribadi atau penting. Ukuran besar tidak berarti sampah.";
+        if (item.category == Category.SCREENSHOT)
+            return "Screenshot dapat berisi bukti, tiket, kode, percakapan atau informasi penting.";
+        if (item.category == Category.OLD_DOWNLOAD)
+            return "File lama di Download tidak otomatis tidak berguna.";
+        if (item.category == Category.APK)
+            return "Ini installer Android. Hapus hanya jika installer memang tidak diperlukan.";
+        if (item.category == Category.TEMP) {
+            long age = item.modified > 0 ? System.currentTimeMillis() - item.modified : 0L;
+            if (age < TEMP_CAUTION_MS) return "File sementara masih baru dan mungkin sedang dipakai aplikasi.";
+            return "Kemungkinan file sementara lama, tetapi sumbernya tetap perlu diperiksa.";
+        }
+        return "Nama dan ukuran file saja tidak cukup untuk menentukan aman dihapus.";
+    }
+
+    private String sourceFromPath(String path) {
         String p = path == null ? "" : path.replace('\\', '/').toLowerCase(Locale.ROOT);
         if (p.contains("com.whatsapp.w4b") || p.contains("whatsapp business")) return "WhatsApp Business";
         if (p.contains("com.whatsapp") || p.contains("/whatsapp/")) return "WhatsApp";
@@ -801,13 +810,18 @@ public class ReviewMainActivity extends Activity {
         return "Penyimpanan perangkat";
     }
 
-    private String mimeFrom(String name) {
+    private String mimeFromName(String name) {
         if (name == null) return "*/*";
         int dot = name.lastIndexOf('.');
         if (dot < 0 || dot == name.length() - 1) return "*/*";
         String ext = name.substring(dot + 1).toLowerCase(Locale.ROOT);
         String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
         return mime == null ? "*/*" : mime;
+    }
+
+    private boolean isTempName(String n) {
+        return n.endsWith(".tmp") || n.endsWith(".temp") || n.endsWith(".log")
+                || n.endsWith(".bak") || n.endsWith(".old");
     }
 
     private boolean endsWithAny(String value, String... endings) {
@@ -821,6 +835,12 @@ public class ReviewMainActivity extends Activity {
         card.setPadding(dp(14), dp(14), dp(14), dp(14));
         card.setBackground(rounded(surface, dp(18)));
         return card;
+    }
+
+    private TextView section(String value) {
+        TextView t = text(value, 11, primary, Typeface.BOLD);
+        t.setLetterSpacing(0.12f);
+        return t;
     }
 
     private GradientDrawable rounded(int color, int radius) {
@@ -838,12 +858,11 @@ public class ReviewMainActivity extends Activity {
         b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         b.setAllCaps(false);
         b.setTextColor(filled ? bg : primary);
-        GradientDrawable drawable = rounded(filled ? primary : surface2, dp(13));
-        b.setBackground(drawable);
+        b.setBackground(rounded(filled ? primary : surface2, dp(13)));
         return b;
     }
 
-    private TextView label(String value, int sp, int color, int style) {
+    private TextView text(String value, int sp, int color, int style) {
         TextView t = new TextView(this);
         t.setText(value);
         t.setTextSize(sp);
@@ -894,78 +913,15 @@ public class ReviewMainActivity extends Activity {
         Category(String label) { this.label = label; }
     }
 
-    private final class ReviewItem {
+    private static final class ReviewItem {
         File file;
         Uri uri;
         String name;
         String pathHint;
-        String storedMime;
+        String mime;
         long size;
         long modified;
         Category category;
         CheckBox checkbox;
-
-        static ReviewItem fromFile(File file, Category category) {
-            ReviewItem item = new ReviewMainActivity().new ReviewItem();
-            return item;
-        }
-
-        static ReviewItem fromUri(Uri uri, String name, String pathHint, long size, long modified,
-                                  Category category, String mime) {
-            ReviewItem item = new ReviewMainActivity().new ReviewItem();
-            return item;
-        }
-
-        String mime() {
-            return storedMime == null || storedMime.isBlank() ? mimeFrom(name) : storedMime;
-        }
-
-        String kind() {
-            return kindFrom(name, mime());
-        }
-
-        String source() {
-            return sourceFrom(pathHint);
-        }
-
-        String shortKind() {
-            String k = kind();
-            if (k.equals("Video")) return "VID";
-            if (k.equals("Gambar")) return "IMG";
-            if (k.equals("Audio")) return "AUD";
-            if (k.contains("APK")) return "APK";
-            if (k.equals("Dokumen")) return "DOC";
-            if (k.equals("Arsip")) return "ZIP";
-            if (category == Category.TEMP) return "TMP";
-            return "FILE";
-        }
-
-        boolean highRisk() {
-            String k = kind();
-            if (k.equals("Video") || k.equals("Gambar") || k.equals("Audio") || k.equals("Dokumen")) return true;
-            return category == Category.SCREENSHOT || category == Category.OLD_DOWNLOAD || category == Category.APK;
-        }
-
-        String riskLabel() {
-            return highRisk() ? "PERIKSA DULU" : "TINJAU SEBELUM HAPUS";
-        }
-
-        String riskReason() {
-            String k = kind();
-            if (k.equals("Video") || k.equals("Gambar") || k.equals("Audio") || k.equals("Dokumen"))
-                return "Bisa merupakan file pribadi atau penting. Ukuran besar tidak berarti sampah.";
-            if (category == Category.SCREENSHOT)
-                return "Screenshot dapat berisi bukti, tiket, kode, percakapan atau informasi penting.";
-            if (category == Category.OLD_DOWNLOAD)
-                return "File lama di Download tidak otomatis tidak berguna.";
-            if (category == Category.APK)
-                return "Ini installer Android. Hapus hanya jika installer memang tidak diperlukan.";
-            if (category == Category.TEMP) {
-                long age = modified > 0 ? System.currentTimeMillis() - modified : 0L;
-                if (age < TEMP_CAUTION_MS) return "File sementara masih baru dan mungkin sedang dipakai aplikasi.";
-                return "Kemungkinan file sementara lama, tetapi sumbernya tetap perlu diperiksa.";
-            }
-            return "Nama dan ukuran file saja tidak cukup untuk menentukan aman dihapus.";
-        }
     }
 }
