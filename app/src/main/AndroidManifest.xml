@@ -32,6 +32,10 @@
 
         <activity
             android:name=".ReviewMainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ReviewMainActivityV104"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
