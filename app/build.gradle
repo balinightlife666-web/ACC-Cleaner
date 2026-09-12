@@ -10,8 +10,8 @@ android {
         applicationId 'com.acc.cleaner'
         minSdk 26
         targetSdk 36
-        versionCode 4
-        versionName '1.0.3'
+        versionCode 5
+        versionName '1.0.4'
     }
 
     buildTypes {
@@ -26,4 +26,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.15.0'
 }
