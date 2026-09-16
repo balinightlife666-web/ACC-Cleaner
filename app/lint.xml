@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Android's documented SAF pattern obtains these two grant flags from the result Intent.
+         Lint 9.3 flags the bitmask passed to takePersistableUriPermission as WrongConstant
+         even though it is restricted to the two supported grant flags. Keep this suppression
+         scoped to the active Folder Scan implementation only. -->
+    <issue id="WrongConstant">
+        <ignore path="src/main/java/com/acc/cleaner/ReviewMainActivityV104.java" />
+    </issue>
+</lint>
