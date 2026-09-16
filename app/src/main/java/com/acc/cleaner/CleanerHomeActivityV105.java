@@ -1,10 +1,13 @@
 package com.acc.cleaner;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -42,16 +45,18 @@ public class CleanerHomeActivityV105 extends Activity {
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         setContentView(scroll);
 
-        TextView brand = text("ACC CLEANER · v1.0.5", 12, primary, Typeface.BOLD);
+        TextView brand = text("ACC CLEANER · v1.1.0", 12, primary, Typeface.BOLD);
         brand.setLetterSpacing(0.14f);
         root.addView(brand);
 
-        TextView title = text("Pilih jenis scan", 27, text, Typeface.BOLD);
+        TextView title = text("Bersihkan file. Kamu yang putuskan.", 27, text, Typeface.BOLD);
         LinearLayout.LayoutParams titleLp = matchWrap();
         titleLp.topMargin = dp(7);
         root.addView(title, titleLp);
 
-        TextView sub = text("WhatsApp Business sekarang dipisah supaya ribuan file tidak bercampur dengan hasil scan lain.", 14, muted, Typeface.NORMAL);
+        TextView sub = text(
+                "ACC Cleaner menampilkan file untuk ditinjau sebelum ada tindakan hapus. Tidak ada auto-delete.",
+                14, muted, Typeface.NORMAL);
         LinearLayout.LayoutParams subLp = matchWrap();
         subLp.topMargin = dp(6);
         root.addView(sub, subLp);
@@ -60,27 +65,39 @@ public class CleanerHomeActivityV105 extends Activity {
         LinearLayout.LayoutParams generalLp = matchWrap();
         generalLp.topMargin = dp(20);
         root.addView(general, generalLp);
-        general.addView(text("SCAN UMUM", 12, primary, Typeface.BOLD));
-        TextView generalDesc = text("Foto, video, APK, Download lama, screenshot, temporary/log dan file besar.", 13, muted, Typeface.NORMAL);
+        general.addView(text("FILE CLEANER", 12, primary, Typeface.BOLD));
+        TextView generalDesc = text(
+                "Tinjau file besar, Download lama, screenshot, installer APK, temporary/log, foto, video dan dokumen.",
+                13, muted, Typeface.NORMAL);
         LinearLayout.LayoutParams generalDescLp = matchWrap();
         generalDescLp.topMargin = dp(6);
         general.addView(generalDesc, generalDescLp);
-        Button generalButton = button("BUKA SCAN UMUM", false);
+        TextView generalSafe = text(
+                "Scan Perangkat dapat memakai akses semua file. Folder Scan tersedia sebagai opsi tanpa akses luas.",
+                11, warning, Typeface.BOLD);
+        LinearLayout.LayoutParams generalSafeLp = matchWrap();
+        generalSafeLp.topMargin = dp(8);
+        general.addView(generalSafe, generalSafeLp);
+        Button generalButton = button("BUKA FILE CLEANER", false);
         LinearLayout.LayoutParams generalBtnLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50));
         generalBtnLp.topMargin = dp(12);
         general.addView(generalButton, generalBtnLp);
-        generalButton.setOnClickListener(v -> startActivity(new Intent(this, ReviewMainActivityV104.class)));
+        generalButton.setOnClickListener(v -> openGeneralCleaner());
 
         LinearLayout wa = card();
         LinearLayout.LayoutParams waLp = matchWrap();
         waLp.topMargin = dp(14);
         root.addView(wa, waLp);
         wa.addView(text("WHATSAPP BUSINESS", 12, primary, Typeface.BOLD));
-        TextView waDesc = text("Scan khusus folder WhatsApp Business. Bisa pilih ribuan TMP/log sekaligus tanpa centang satu-satu.", 14, text, Typeface.BOLD);
+        TextView waDesc = text(
+                "Scan khusus folder WhatsApp Business. Bisa memilih TMP/log lama dalam jumlah besar untuk ditinjau.",
+                14, text, Typeface.BOLD);
         LinearLayout.LayoutParams waDescLp = matchWrap();
         waDescLp.topMargin = dp(6);
         wa.addView(waDesc, waDescLp);
-        TextView safe = text("Bulk select tidak otomatis menghapus. Tetap ada 2 konfirmasi sebelum penghapusan permanen.", 12, warning, Typeface.BOLD);
+        TextView safe = text(
+                "Bulk select hanya menandai file. Penghapusan permanen tetap memakai dua konfirmasi.",
+                12, warning, Typeface.BOLD);
         LinearLayout.LayoutParams safeLp = matchWrap();
         safeLp.topMargin = dp(8);
         wa.addView(safe, safeLp);
@@ -88,7 +105,63 @@ public class CleanerHomeActivityV105 extends Activity {
         LinearLayout.LayoutParams waBtnLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54));
         waBtnLp.topMargin = dp(14);
         wa.addView(waButton, waBtnLp);
-        waButton.setOnClickListener(v -> startActivity(new Intent(this, WhatsAppBusinessCleanerActivity.class)));
+        waButton.setOnClickListener(v -> openWhatsAppCleaner());
+
+        LinearLayout privacy = card();
+        LinearLayout.LayoutParams privacyLp = matchWrap();
+        privacyLp.topMargin = dp(14);
+        root.addView(privacy, privacyLp);
+        privacy.addView(text("PRIVASI & AKSES", 12, primary, Typeface.BOLD));
+        TextView privacyDesc = text(
+                "Build ini tidak meminta izin internet dan tidak mengirim file keluar perangkat. Akses file dipakai hanya untuk fungsi pembersihan yang kamu mulai sendiri.",
+                12, muted, Typeface.NORMAL);
+        LinearLayout.LayoutParams privacyDescLp = matchWrap();
+        privacyDescLp.topMargin = dp(6);
+        privacy.addView(privacyDesc, privacyDescLp);
+        Button privacyButton = button("LIHAT PRIVASI & AKSES", false);
+        LinearLayout.LayoutParams privacyBtnLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48));
+        privacyBtnLp.topMargin = dp(12);
+        privacy.addView(privacyButton, privacyBtnLp);
+        privacyButton.setOnClickListener(v -> startActivity(new Intent(this, PrivacyActivity.class)));
+    }
+
+    private void openGeneralCleaner() {
+        if (!needsBroadAccessDisclosure()) {
+            startActivity(new Intent(this, ReviewMainActivityV104.class));
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Tentang akses file")
+                .setMessage(
+                        "Scan Perangkat dapat meminta izin Akses semua file agar ACC Cleaner dapat meninjau dan memelihara file/folder di penyimpanan bersama. "
+                                + "File tetap diproses lokal dan tidak diunggah. ACC Cleaner tidak memilih atau menghapus file otomatis.\n\n"
+                                + "Kamu juga dapat masuk lalu memakai Pilih Folder tanpa memberikan akses semua file.")
+                .setNegativeButton("Batal", null)
+                .setPositiveButton("Lanjut ke cleaner", (dialog, which) ->
+                        startActivity(new Intent(this, ReviewMainActivityV104.class)))
+                .show();
+    }
+
+    private void openWhatsAppCleaner() {
+        if (!needsBroadAccessDisclosure()) {
+            startActivity(new Intent(this, WhatsAppBusinessCleanerActivity.class));
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Akses untuk WhatsApp Business Cleaner")
+                .setMessage(
+                        "Fitur ini perlu meninjau folder WhatsApp Business secara otomatis, termasuk Android/media/com.whatsapp.w4b. "
+                                + "Pada Android 11+ ACC Cleaner akan meminta Akses semua file. Data tidak diunggah dan penghapusan tetap hanya terjadi setelah kamu memilih file dan mengonfirmasi dua kali.")
+                .setNegativeButton("Batal", null)
+                .setPositiveButton("Lanjut", (dialog, which) ->
+                        startActivity(new Intent(this, WhatsAppBusinessCleanerActivity.class)))
+                .show();
+    }
+
+    private boolean needsBroadAccessDisclosure() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager();
     }
 
     private LinearLayout card() {

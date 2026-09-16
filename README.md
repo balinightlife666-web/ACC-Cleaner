@@ -1,47 +1,56 @@
 # ACC Cleaner
 
-Native Android storage-cleaning utility focused on safe, user-controlled cleanup.
+Native Android file-maintenance utility focused on safe, user-controlled cleanup.
 
-## v1.0.3 review-first scope
+## v1.1.0 Play release candidate scope
 
-- Storage usage summary
-- Deep Scan (optional Android “All files access” permission)
-- Folder Scan fallback using Android Storage Access Framework
-- Large file detection (>=100 MB)
-- Old Download detection (>=30 days)
-- Screenshot detection
-- APK installer detection
-- Temporary/log file detection
-- Visible file review before delete
+- Target SDK / compile SDK 36
+- File Cleaner with device-wide review mode and Folder Scan fallback
+- WhatsApp Business Cleaner separated from general results
+- Large file, old Download, screenshot, APK installer and temporary/log detection
+- Visible file review before deletion
 - File name, type, size, source, path, modified time and risk explanation
 - Open/preview action where Android grants a readable URI
 - Multi-select cleanup
 - Double confirmation before permanent deletion
 - No automatic selection
 - No automatic deletion
+- In-app privacy and storage-access explanation
+- No INTERNET permission, ad SDK or analytics SDK in the v1.1.0 baseline
+
+## Storage access model
+
+Android 11+ restricts broad filesystem access. ACC Cleaner supports:
+
+1. **Scan Perangkat** — may request Android `MANAGE_EXTERNAL_STORAGE` because the core file-maintenance feature needs to find and manage files/folders across shared storage.
+2. **Folder Scan** — uses Android's Storage Access Framework and works without broad filesystem access.
+3. **WhatsApp Business Cleaner** — uses broad access to automatically inspect the supported WhatsApp Business storage location.
+
+The broad permission is never used for uploading files or for a third party. Users still choose files and confirm deletion.
 
 ## Build
 
-The repository includes GitHub Actions workflows. Push to `main` or run **Android Build** manually. The downloadable artifact is `ACC-Cleaner-debug`.
-
-Local build requirements:
+Local requirements:
 
 - JDK 17
 - Android SDK 36
 - Android Build Tools 36.0.0
 - Gradle 9.5.0
 
-Run:
+Debug build:
 
 ```bash
 gradle :app:assembleDebug
 ```
 
-## Storage policy
+Play-candidate validation:
 
-Android 11+ restricts broad filesystem access. ACC Cleaner supports two modes:
+```bash
+gradle clean lintRelease assembleRelease bundleRelease
+```
 
-1. **Deep Scan** — requires the user to explicitly grant “All files access”.
-2. **Folder Scan** — uses Android's system folder picker and works without broad storage access.
+The Play-candidate AAB produced before signing is **not upload-ready**. A permanent upload key must be configured before Google Play submission.
 
-ACC Cleaner is review-first: scan results must be shown to the user before deletion controls are enabled. The app never auto-selects or auto-deletes files.
+## Google Play preparation
+
+See `PLAY_RELEASE_CHECKLIST.md` and `PRIVACY_POLICY.md`.
